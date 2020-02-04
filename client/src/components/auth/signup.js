@@ -33,8 +33,11 @@ export default class SignUp extends Component {
     }
 
     render() {
+        const style = {
+            marginTop: '100px'
+        }
         return (
-            <div>
+            <div style={style}>
                 <h1>Create a New Account</h1>
                 <p>It’s quick and easy.</p>
                 <Form>

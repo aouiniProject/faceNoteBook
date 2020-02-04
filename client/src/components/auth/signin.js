@@ -2,17 +2,20 @@ import React, { Component } from "react";
 import { Button, Form, Navbar, FormControl } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
+import { Redirect } from "react-router-dom";
 
 export default class SignIn extends Component {
   constructor(props) {
     super(props);
     this.state = {
       email: "",
-      password: ""
+      password: "",
+      redirect: false
     };
 
     this.onChange = this.onChange.bind(this);
     this.onSubmite = this.onSubmite.bind(this);
+    this.login = this.login.bind(this);
   }
 
   onChange(e) {
@@ -23,15 +26,32 @@ export default class SignIn extends Component {
     console.log(this.state);
   }
 
-  onSubmite(e) {
-    e.preventDefault();
-    axios.post('/api/userIn', this.state)
-      .then((res) => console.log(res))
-      .catch(err => console.log('this is a nono: ' + err))
+  login() {
+    this.setState({ redirect: true })
+  }
 
+  onSubmite(e) {
+
+    axios.post('/api/userIn', this.state)
+      .then((res) => {
+        if (res.data.red) {
+          localStorage.setItem('token', res.data.token)
+
+        }
+        console.log(res);
+
+      })
+      .then(() => this.login())
+      .catch(err => console.log('this is a nono: ' + err))
+    e.preventDefault();
   }
 
   render() {
+    let { redirect } = this.state
+    if (redirect) {
+      return (<Redirect to="/Home"></Redirect>)
+    }
+
     const brand = {
       fontSize: "30px"
     };

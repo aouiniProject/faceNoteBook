@@ -9,6 +9,6 @@ const pool = new Pool({
 
 pool.connect()
     .then(() => console.log('database is connected'))
-    .catch((e) => console.log('naah: ' + e))
+    .catch(e => console.log(e))
 
 module.exports.pool = pool;

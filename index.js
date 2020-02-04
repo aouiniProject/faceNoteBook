@@ -14,8 +14,10 @@ app.use(bodyParser.json({ type: 'application/json' }));
 //     password: '123456789',
 //     port: 5432,
 // });
+require('dotenv').config();
 app.use(cors());
-require('./routes/userRoutes')(app)
+require('./routes/userRoutes')(app);
+require('./routes/messagesRoutes')(app);
 
 
 if (process.env.NODE_ENV === 'production') {
