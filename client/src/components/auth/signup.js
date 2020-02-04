@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Container, Button, Input, Form } from 'react-bootstrap';
+import { Container, Button, Input, Form, Alert } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios';
 
@@ -10,7 +10,9 @@ export default class SignUp extends Component {
             userName: "",
             email: "",
             password: "",
-            gender: null
+            gender: null,
+            errAlert: false,
+            successSignUp: false
         }
         this.onChange = this.onChange.bind(this);
         this.onSubmite = this.onSubmite.bind(this);
@@ -19,8 +21,18 @@ export default class SignUp extends Component {
     onSubmite(e) {
         e.preventDefault()
         axios.post('/api/signUp ', this.state)
-            .then(res => console.log(res))
-            .catch(err => console.log(err))
+            .then(res => {
+                console.log(res)
+                this.setState({ errAlert: false })
+                this.setState({ successSignUp: true })
+
+            })
+            .catch(err => {
+                console.log(err)
+
+                this.setState({ errAlert: true })
+
+            })
 
     }
 
@@ -40,6 +52,27 @@ export default class SignUp extends Component {
             <div style={style}>
                 <h1>Create a New Account</h1>
                 <p>It’s quick and easy.</p>
+                {/* onClose={() => this.setState({ errAlert: false })}  */}
+                {
+
+                    this.state.errAlert ? <Alert variant="danger" dismissible>
+                        <Alert.Heading>Oh snap! You got an error!</Alert.Heading>
+                        <p>
+                            You have a problem with your credentials.
+                        </p>
+                    </Alert> : <div></div>
+
+                }
+                {
+
+                    this.state.successSignUp ? <Alert variant="success" dismissible>
+                        <Alert.Heading>You've successfuly created an Account</Alert.Heading>
+                        <p>
+                            Congratulations for creating your account.
+                        </p>
+                    </Alert> : <div></div>
+
+                }
                 <Form>
                     <Form.Group controlId="nameUP">
                         <Form.Control required size="lg" type="text" value={this.state.value} onChange={this.onChange} name="userName" placeholder="User Name" />

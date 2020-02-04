@@ -2,6 +2,7 @@ import React, { Component, useState } from 'react';
 import axios from 'axios';
 import Navb from './../nav/nav';
 import { Container, Button, Modal, Row, Col, Form } from 'react-bootstrap';
+import jwtDecode from 'jwt-decode';
 
 
 class SendMsg extends Component {
@@ -29,8 +30,8 @@ class SendMsg extends Component {
         e.preventDefault();
         const { message, receiver } = this.state;
         axios.post('http://localhost:3001/api/messages', { message, receiver, token: localStorage.getItem('token') })
-            .then(() => console.log(localStorage.getItem('token')))
             .then(res => console.log(res))
+            .then(() => console.log(localStorage.getItem('token')))
             .catch(err => console.log(err))
     }
 
@@ -78,11 +79,24 @@ export default class Search extends Component {
         this.state = {
             result: []
         }
+
+        this.onFriendRequest = this.onFriendRequest.bind(this);
     }
 
     componentDidMount() {
         axios.get(`http://localhost:3001/api/search/${sessionStorage.getItem('search')}`)
             .then(res => this.setState({ result: res.data }))
+            .catch(err => console.log(err))
+    }
+
+    onFriendRequest(e) {
+        e.preventDefault();
+        const { username } = jwtDecode(localStorage.getItem('token'))
+        const receiver = e.target.name;
+        console.log(username)
+
+        axios.post('/api/friendsRequests', { username, receiver })
+            .then(res => console.log(res))
             .catch(err => console.log(err))
     }
 
@@ -98,8 +112,11 @@ export default class Search extends Component {
                                     <Col>
                                         <h2>{user.username}</h2>
                                     </Col>
+
                                     <Col>
-                                        <h4>followers: {user.followers}</h4>
+                                        <Form>
+                                            <Button onClick={this.onFriendRequest} type="submit" name={user.username}>Add Friend</Button>
+                                        </Form>
                                     </Col>
                                     <Col>
                                         <SendMsg username={user.username}></SendMsg>

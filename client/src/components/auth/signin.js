@@ -31,6 +31,7 @@ export default class SignIn extends Component {
   }
 
   onSubmite(e) {
+    e.preventDefault();
 
     axios.post('/api/userIn', this.state)
       .then((res) => {
@@ -43,7 +44,6 @@ export default class SignIn extends Component {
       })
       .then(() => this.login())
       .catch(err => console.log('this is a nono: ' + err))
-    e.preventDefault();
   }
 
   render() {
