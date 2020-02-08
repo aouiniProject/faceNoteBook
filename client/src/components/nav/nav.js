@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Navbar, Nav, Button, Form, FormControl } from 'react-bootstrap';
+import { Navbar, Nav, Button, Form, FormControl, Container } from 'react-bootstrap';
 import { Redirect } from 'react-router-dom';
 
 export default class Navb extends Component {
@@ -26,7 +26,7 @@ export default class Navb extends Component {
     }
 
     onSearch(e) {
-        sessionStorage.setItem('search', `${this.state.search}`)
+        localStorage.setItem('search', `${this.state.search}`)
         // return (<Redirect to="/search"></Redirect>)
         this.setState({ redirect: true })
         e.preventDefault()
@@ -46,7 +46,9 @@ export default class Navb extends Component {
 
 
         return (
-            <div>
+
+            <Container>
+
                 <Navbar bg="light" expand="lg">
                     <Navbar.Brand href="/Home"><b>facenotebook</b></Navbar.Brand>
                     <Form inline>
@@ -57,13 +59,15 @@ export default class Navb extends Component {
                     </Form>
 
                     <Nav >
+                        <Nav.Link href='/invitations'>Invitations</Nav.Link>
                         <Nav.Link href='/messages'>Messages</Nav.Link>
                         <Nav.Link onClick={this.logout} href='/'>Logout</Nav.Link>
                     </Nav>
 
 
                 </Navbar>
-            </div>
+            </Container>
+
         )
     }
 } 

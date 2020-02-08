@@ -12,7 +12,8 @@ class SendMsg extends Component {
         this.state = {
             receiver: this.props.username,
             message: '',
-            setShow: false
+            setShow: false,
+            users: {}
         }
 
         this.onChange = this.onChange.bind(this);
@@ -77,25 +78,96 @@ export default class Search extends Component {
         super(props);
 
         this.state = {
-            result: []
+            results: []
+
         }
 
         this.onFriendRequest = this.onFriendRequest.bind(this);
+        this.onDeleteRequest = this.onDeleteRequest.bind(this);
+        this.onDeleteFriend = this.onDeleteFriend.bind(this);
     }
 
     componentDidMount() {
-        axios.get(`http://localhost:3001/api/search/${sessionStorage.getItem('search')}`)
-            .then(res => this.setState({ result: res.data }))
+        axios.get(`http://localhost:3001/api/search/${localStorage.getItem('search')}/${localStorage.getItem('token')}`)
+            .then(res => {
+
+                const { username } = jwtDecode(localStorage.getItem('token'));
+                console.log(res.data)
+                let result = [];
+                if (res.data.users.length < 9) {
+                    for (let i = 0; i < res.data.users.length; i++) {
+                        const elem = res.data.users[i];
+                        for (let i = 0; i < res.data.request.length; i++) {
+                            const el = res.data.request[i];
+                            if (el.sender === elem.username && el.sender !== username || el.accepter === elem.username && el.accepter !== username) {
+
+                                elem.request = el.request;
+                                elem.friends = el.friends;
+                            }
+
+                        }
+                        result.push(elem);
+                    }
+
+                } else if (res.data.users.length >= 9) {
+                    for (let i = 0; i < 9; i++) {
+                        const elem = res.data.users[i];
+                        for (let i = 0; i < res.data.request.length; i++) {
+                            const el = res.data.request[i];
+
+                            if (el.sender === elem.username && el.sender !== username || el.accepter === elem.username && el.accepter !== username) {
+
+                                elem.request = el.request
+                                elem.friends = el.friends
+                            }
+
+                        }
+                        result.push(elem);
+                    }
+                }
+                this.setState({ results: result })
+                console.log(this.state.results)
+
+            })
+            .catch(err => console.log(err))
+    }
+
+    onDeleteRequest(e) {
+        e.preventDefault();
+        const { username } = jwtDecode(localStorage.getItem('token'));
+        const contact = e.target.name
+        console.log('delete')
+        axios.put(`http://localhost:3001/api/deleteRequest/${username}/${contact}`)
+            .then(res => {
+                document.getElementById(contact).innerHTML = `<div></div>`
+                console.log(res)
+            })
             .catch(err => console.log(err))
     }
 
     onFriendRequest(e) {
         e.preventDefault();
-        const { username } = jwtDecode(localStorage.getItem('token'))
+        const { username } = jwtDecode(localStorage.getItem('token'));
         const receiver = e.target.name;
-        console.log(username)
 
+        console.log('request')
         axios.post('/api/friendsRequests', { username, receiver })
+            .then(res => {
+                console.log(receiver);
+                // console.log(target);
+                document.getElementById(receiver).innerHTML = `<div></div>`
+
+            })
+            .catch(err => console.log('nope', err))
+    }
+
+    onDeleteFriend(e) {
+        e.preventDefault()
+        console.log(e.target)
+        const { name } = e.target;
+        const { username } = jwtDecode(localStorage.getItem('token'));
+
+        axios.put(`http://localhost:3001/api/deleteFriend/${name}/${username}`)
             .then(res => console.log(res))
             .catch(err => console.log(err))
     }
@@ -105,27 +177,36 @@ export default class Search extends Component {
             <div>
                 <Container>
                     <Navb></Navb>
-                    {this.state.result.map(user => {
+                    {this.state.results.map(user => {
+                        // const {request, friends} = user
+
+                        this.state[user.username] = { friends: user.friends, request: user.request }
+
                         return (
-                            <div>
+                            <div id={user.username}>
+                                <hr></hr>
                                 <Row>
                                     <Col>
-                                        <h2>{user.username}</h2>
+                                        <h4>{user.username}</h4>
                                     </Col>
 
                                     <Col>
                                         <Form>
-                                            <Button onClick={this.onFriendRequest} type="submit" name={user.username}>Add Friend</Button>
+
+                                            <Button onClick={(e) => {
+                                                return this.state[user.username].friends ? this.onDeleteFriend(e) : this.state[e.target.name].request ? this.onDeleteRequest(e) : this.onFriendRequest(e)
+                                            }} type="submit" name={user.username}>{this.state[user.username].friends ? 'Delete Friend' : this.state[user.username].request ? 'Delete Request' : 'Add Friend'}</Button>
                                         </Form>
                                     </Col>
                                     <Col>
                                         <SendMsg username={user.username}></SendMsg>
                                     </Col>
                                 </Row>
-                                <hr></hr>
                             </div>
                         )
-                    })}
+                    })
+                    }
+
 
                 </Container>
             </div>

@@ -1,6 +1,7 @@
 const { pool } = require('../db/DB');
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs');
+const jwtDecode = require('jwt-decode');
 
 module.exports = (app) => {
     app.post('/api/signUp', (req, res) => {
@@ -14,7 +15,6 @@ module.exports = (app) => {
     })
 
     app.post('/api/userIn', (req, response) => {
-        console.log(req.body)
 
         pool.query(`SELECT _id, username, email, password FROM users WHERE email = $1`, [req.body.email])
             .then(res => {
@@ -31,24 +31,89 @@ module.exports = (app) => {
 
     })
 
-    app.get('/api/search/:username', (req, resp) => {
+    app.get('/api/search/:contact/:token', (req, response) => {
+        const { username } = jwtDecode(req.params.token);
+        const { contact } = req.params
+        let results = {}
 
-        pool.query(`SELECT username FROM users WHERE username LIKE $1`, ['%' + req.params.username + '%'])
-            .then(res => {
+        pool.query(`SELECT DISTINCT username FROM users where (username LIKE $1 AND username != $2)`, ['%' + contact + '%', username])
 
-                resp.status(200).send(res.rows)
+            .then(resp => {
+
+                results.users = resp.rows
             })
-            .catch(err => resp.status(400).send(err))
+            .catch(err => response.status(400).send(err))
+        if (pool.query(`SELECT sender, accepter, friends, request FROM friends WHERE ((sender = $1 AND accepter LIKE $2 AND ) OR (accepter = $1 AND sender LIKE $2))`, [username, '%' + contact + '%']).then(res => res)) {
+
+            pool.query(`SELECT sender, accepter, friends, request FROM friends WHERE ((sender = $1 AND accepter LIKE $2) OR (accepter = $1 AND sender LIKE $2))`, [username, '%' + contact + '%'])
+                .then(res => {
+                    results.request = res.rows
+                    response.status(200).send(results)
+
+                })
+                .catch(err => response.status(400).send(err))
+        }
+
     })
 
     app.post('/api/friendsRequests', (req, resp) => {
-        console.log(req.body)
-        const { username, receiver } = req.body
 
-        pool.query(`INSERT INTO friends (sender, accepter, friends) VALUES ($1, $2, $3)`, [username, receiver, false])
-            .then(() => console.log('done'))
+        const { username, receiver } = req.body
+        pool.query('SELECT sender, accepter FROM friends WHERE (sender = $1 AND accepter = $2) OR (sender = $2 AND accepter = $1)', [username, receiver])
+            .then((res) => {
+                console.log(res.rows[0])
+                if (!res.rows[0]) {
+                    pool.query(`INSERT INTO friends (sender, accepter, friends, request) VALUES ($1, $2, $3, $4)`, [username, receiver, false, true])
+                        .then(res => {
+                            resp.send('Invitation have been sent!!')
+                            console.log('Request have been sent !!')
+                        }
+                        )
+                        .catch(err => console.log(err))
+
+
+                } else if (res.rows[0]) {
+                    resp.send("You've sent invitation already!!")
+                    pool.query('UPDATE friends SET request = $1, sender = $2, accepter = $3 WHERE accepter = $2 AND sender = $3 OR sender = $2 AND accepter = $3', [true, username, receiver])
+                        .then(res => resp.send(res))
+                        .catch(err => console.log(err))
+                    console.log('nope')
+                }
+
+            })
             .catch(err => console.log(err))
     })
 
+    app.put('/api/deleteRequest/:user/:contact', (req, resp) => {
+        const { user, contact } = req.params;
+
+        pool.query(`UPDATE friends SET request = $1 where sender = $2 AND accepter = $3 OR sender = $3 AND accepter = $2`, [false, user, contact])
+            .then(res => resp.send(res))
+            .catch(err => console.log(err))
+    })
+
+    app.get('/api/invites/:token', (req, resp) => {
+        const { username } = jwtDecode(req.params.token);
+        // console.log(username);
+        pool.query('SELECT sender, friends, request FROM friends WHERE accepter = $1 AND friends = $2 AND request = $3', [username, false, true])
+            .then(res => resp.send(res.rows))
+            .catch(err => console.log(err))
+    })
+
+    app.put(`/api/sendInvites/:accepter/:accepted`, (req, resp) => {
+        const { accepter, accepted } = req.params
+        pool.query(`UPDATE friends SET friends = $1 WHERE sender = $2 AND accepter = $3 OR sender = $3 AND accepter = $2`, [true, accepted, accepter])
+            .then(res => resp.send(res))
+            .catch(err => console.log(err))
+    })
+
+    app.put(`/api/deleteFriend/:friend/:user`, (req, resp) => {
+        console.log(req.params)
+        const { friend, user } = req.params;
+
+        pool.query('UPDATE friends SET friends = $1, request = $1 WHERE sender = $2 AND accepter = $3 OR accepter = $2 AND sender = $3', [false, friend, user])
+            .then(res => resp.send(res))
+            .catch(err => console.log(err))
+    })
 
 }

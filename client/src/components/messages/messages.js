@@ -133,6 +133,7 @@ export default class Messages extends Component {
 
                                 this.state.contacts.map(friend => {
                                     return (
+
                                         <Button size="lg" name={friend} onClick={this.getMessages} type="button">{friend}</Button>
 
                                     )

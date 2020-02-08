@@ -19,8 +19,9 @@ export default class Home extends Component {
             <div>
                 <Container>
                     <Navb></Navb>
+                    <br></br>
+                    <Posts></Posts>
                 </Container>
-                <Posts></Posts>
 
             </div>
         )
