@@ -4,10 +4,11 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Pool, Client } = require('pg');
 const socket = require('socket.io');
+const cool = require('cool-ascii-faces');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ type: 'application/json' }));
-
+app.get('/cool', (req, res) => res.send(cool()));
 require('dotenv').config();
 app.use(cors());
 
