@@ -3,6 +3,8 @@ const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Pool, Client } = require('pg');
+const socket = require('socket.io');
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ type: 'application/json' }));
 
@@ -27,4 +29,18 @@ if (process.env.NODE_ENV === 'production') {
 
 const port = process.env.PORT || 3001;
 
-app.listen(port, () => console.log(`listening on port ${port}`))
+let server = app.listen(port, () => console.log(`listening on port ${port}`))
+
+let io = socket(server);
+
+io.on('connection', (socket) => {
+    console.log('made socket connection');
+
+    socket.on('message', (data) => {
+        io.sockets.emit('message', data)
+    })
+
+    socket.on('disconnect', () => {
+        console.log('client disconnect...', socket.id)
+    })
+}) 

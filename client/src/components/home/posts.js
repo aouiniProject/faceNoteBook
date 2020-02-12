@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, FormControl, Col, Row, Button } from 'react-bootstrap';
+import { Form, FormControl, Col, Row, Button, Accordion, Card } from 'react-bootstrap';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode'
 
@@ -8,7 +8,8 @@ export default class Posts extends Component {
         super(props);
 
         this.state = {
-            post: ''
+            post: '',
+            friendsPosts: []
         }
         this.onchange = this.onchange.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
@@ -33,7 +34,10 @@ export default class Posts extends Component {
     componentDidMount() {
         const { username } = jwtDecode(localStorage.getItem('token'));
         axios.get(`http://localhost:3001/api/getPosts/${username}`)
-            .then(res => console.log(res))
+            .then(res => {
+                console.log(res)
+                this.setState({ friendsPosts: res.data })
+            })
             .catch(err => console.log(err))
     }
 
@@ -56,7 +60,49 @@ export default class Posts extends Component {
                     </Col>
                 </Row>
                 <Row>
+                    <Accordion>
+                        {
+                            this.state.friendsPosts.map((friend, i) => {
+                                return (
+                                    <Card>
+                                        <Card.Header>
+                                            <Accordion.Toggle as={Button} eventKey={i}>
+                                                {friend[0].poster}
+                                            </Accordion.Toggle>
+                                        </Card.Header>
+                                        <Accordion.Collapse eventKey={i}>
+                                            <Card.Body>
+                                                {
+                                                    friend.map((post, i) => {
+                                                        if (i === 0) {
+                                                            return (
+                                                                <div>
+                                                                    <p>
+                                                                        {post.post}
 
+                                                                    </p>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        return (
+                                                            <div>
+                                                                <hr></hr>
+                                                                <p>
+                                                                    {post.post}
+
+                                                                </p>
+                                                            </div>
+
+                                                        )
+                                                    })
+                                                }
+                                            </Card.Body>
+                                        </Accordion.Collapse>
+                                    </Card>
+                                )
+                            })
+                        }
+                    </Accordion>
                 </Row>
             </div>
         )

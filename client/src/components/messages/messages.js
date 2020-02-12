@@ -3,6 +3,7 @@ import Navb from './../nav/nav';
 import { Container, Row, Col, ButtonGroup, Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import jwtDecode from 'jwt-decode';
+import io from 'socket.io-client';
 
 
 export default class Messages extends Component {
@@ -19,14 +20,23 @@ export default class Messages extends Component {
         this.getMessages = this.getMessages.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onSend = this.onSend.bind(this);
+        this.socket = io('localhost:3001');
     }
 
     onSend(e) {
         e.preventDefault();
+        const { username } = jwtDecode(localStorage.getItem('token'))
         const { message, receiver } = this.state;
+
         axios.post('http://localhost:3001/api/messages', { message, receiver, token: localStorage.getItem('token') })
-            .then(() => console.log(localStorage.getItem('token')))
-            .then(res => console.log(res))
+            .then(() => {
+                this.socket.emit('message', {
+                    sender: username,
+                    message: this.state.message,
+                    receiver: this.state.receiver
+
+                })
+            })
             .catch(err => console.log(err))
     }
 
@@ -34,7 +44,6 @@ export default class Messages extends Component {
         e.preventDefault()
 
         this.setState({ [e.target.name]: e.target.value });
-        console.log(this.state)
     }
 
     componentDidMount() {
@@ -150,40 +159,43 @@ export default class Messages extends Component {
                                     <Row>
                                         <Col xs={11}>
                                             <Form.Group controlId="sendMessage">
-                                                <Form.Control size="lg" onChange={this.onChange} name="message" type="text" placeholder="Send Message" />
+                                                <Form.Control size="lg" onChange={this.onChange} name="message" type="text" placeholder="Send Message" controlId="message" />
 
                                             </Form.Group>
                                         </Col>
                                         <Col xs={1}>
-                                            <Button onClick={this.onSend} size="lg" type='submit' >Send</Button>
+                                            <Button onClick={this.onSend} size="lg" type='submit' controlId="btn" name={this.state.receiver}>Send</Button>
                                         </Col>
 
                                     </Row>
                                 </Form> : <div></div>
                         }
 
-                        {
-                            this.state.messages.map((message, i) => {
-                                if (i !== 0) {
-                                    return (
-                                        <div>
-                                            <hr></hr>
-                                            <h6><b>{message.poster}</b></h6>
-                                            <p><b>{message.message}</b></p>
-                                        </div>
-                                    )
-                                }
-                                else {
-                                    return (
-                                        <div>
+                        <div id={this.state.receiver}>
+                            {
+                                this.state.messages.map((message, i) => {
+                                    if (i !== 0) {
+                                        return (
+                                            <div>
+                                                <hr></hr>
+                                                <h6><b>{message.poster}</b></h6>
+                                                <p><b>{message.message}</b></p>
+                                            </div>
+                                        )
+                                    }
+                                    else {
+                                        return (
+                                            <div>
 
-                                            <h6><b>{message.poster}</b></h6>
-                                            <p>{message.message}</p>
-                                        </div>
-                                    )
-                                }
-                            })
-                        }
+                                                <h6><b>{message.poster}</b></h6>
+                                                <p>{message.message}</p>
+                                            </div>
+                                        )
+                                    }
+                                })
+                            }
+
+                        </div>
                     </Col>
                 </Row>
             </div >
