@@ -18,16 +18,16 @@ export default class Invitations extends Component {
     }
 
     componentDidMount() {
-        axios.get(`http://localhost:3001/api/invites/${localStorage.getItem('token')}`)
+        axios.get(`/api/invites/${localStorage.getItem('token')}`)
             .then(res => this.setState({ contacts: res.data }))
-            .then(() => console.log(this.state))
+            // .then(() => console.log(this.state))
             .catch(err => console.log(err))
     }
 
     onDeleteRequest(e) {
         const { name } = e.target
         const { username } = JwtDecode(localStorage.getItem('token'));
-        axios.put(`http://localhost:3001/api/deleteRequest/${username}/${name}`)
+        axios.put(`/api/deleteRequest/${username}/${name}`)
             .then(res => {
                 console.log(res)
                 let div = document.getElementById(name)
@@ -39,7 +39,7 @@ export default class Invitations extends Component {
     onAccept(e) {
         const { name } = e.target
         const { username } = JwtDecode(localStorage.getItem('token'));
-        axios.put(`http://localhost:3001/api/sendInvites/${username}/${name}`)
+        axios.put(`/api/sendInvites/${username}/${name}`)
             .then(res => {
                 console.log(res)
                 let div = document.getElementById(name)

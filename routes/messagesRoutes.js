@@ -2,11 +2,11 @@ const { pool } = require('./../db/DB');
 const jwtDecode = require('jwt-decode');
 
 module.exports = (app) => {
-    app.post(`/api/messages`, (response, req) => {
+    app.post(`/api/messages`, (req, resp) => {
 
-        const { username } = jwtDecode(response.body.token)
-        pool.query('INSERT INTO messages (message, poster, receiver)  VALUES ($1, $2, $3)', [response.body.message, username, response.body.receiver])
-            .then(res => req.send('Message has been sent'))
+        const { username } = jwtDecode(req.body.token)
+        pool.query('INSERT INTO messages (message, poster, receiver)  VALUES ($1, $2, $3)', [req.body.message, username, req.body.receiver])
+            .then(res => resp.send('Message has been sent'))
             .catch(err => console.log(err))
 
     })
@@ -15,7 +15,10 @@ module.exports = (app) => {
         const { username } = jwtDecode(req.params.token)
 
         pool.query(`SELECT poster, receiver FROM messages WHERE poster = $1 OR receiver = $1`, [username])
-            .then(res => resp.send({ results: res.rows }))
+            .then(res => {
+                console.log(res)
+                resp.send({ results: res.rows })
+            })
             .catch(err => console.log(err))
     })
 

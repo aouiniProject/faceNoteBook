@@ -30,7 +30,7 @@ class SendMsg extends Component {
     onSend(e) {
         e.preventDefault();
         const { message, receiver } = this.state;
-        axios.post('http://localhost:3001/api/messages', { message, receiver, token: localStorage.getItem('token') })
+        axios.post('/api/messages', { message, receiver, token: localStorage.getItem('token') })
             .then(res => console.log(res))
             .then(() => console.log(localStorage.getItem('token')))
             .catch(err => console.log(err))
@@ -88,11 +88,11 @@ export default class Search extends Component {
     }
 
     componentDidMount() {
-        axios.get(`http://localhost:3001/api/search/${localStorage.getItem('search')}/${localStorage.getItem('token')}`)
+        axios.get(`/api/search/${localStorage.getItem('search')}/${localStorage.getItem('token')}`)
             .then(res => {
 
                 const { username } = jwtDecode(localStorage.getItem('token'));
-                console.log(res.data)
+                // console.log(res.data)
                 let result = [];
                 if (res.data.users.length < 9) {
                     for (let i = 0; i < res.data.users.length; i++) {
@@ -126,7 +126,7 @@ export default class Search extends Component {
                     }
                 }
                 this.setState({ results: result })
-                console.log(this.state.results)
+                // console.log(this.state.results)
 
             })
             .catch(err => console.log(err))
@@ -136,8 +136,8 @@ export default class Search extends Component {
         e.preventDefault();
         const { username } = jwtDecode(localStorage.getItem('token'));
         const contact = e.target.name
-        console.log('delete')
-        axios.put(`http://localhost:3001/api/deleteRequest/${username}/${contact}`)
+        // console.log('delete')
+        axios.put(`/api/deleteRequest/${username}/${contact}`)
             .then(res => {
                 document.getElementById(contact).innerHTML = `<div></div>`
                 console.log(res)
@@ -150,7 +150,6 @@ export default class Search extends Component {
         const { username } = jwtDecode(localStorage.getItem('token'));
         const receiver = e.target.name;
 
-        console.log('request')
         axios.post('/api/friendsRequests', { username, receiver })
             .then(res => {
                 console.log(receiver);
@@ -167,8 +166,11 @@ export default class Search extends Component {
         const { name } = e.target;
         const { username } = jwtDecode(localStorage.getItem('token'));
 
-        axios.put(`http://localhost:3001/api/deleteFriend/${name}/${username}`)
-            .then(res => console.log(res))
+        axios.put(`/api/deleteFriend/${name}/${username}`)
+            .then(res => {
+                console.log(res)
+                document.getElementById(name).innerHTML = `<div></div>`
+            })
             .catch(err => console.log(err))
     }
 
@@ -195,7 +197,7 @@ export default class Search extends Component {
 
                                             <Button onClick={(e) => {
                                                 return this.state[user.username].friends ? this.onDeleteFriend(e) : this.state[e.target.name].request ? this.onDeleteRequest(e) : this.onFriendRequest(e)
-                                            }} type="submit" name={user.username}>{this.state[user.username].friends ? 'Delete Friend' : this.state[user.username].request ? 'Delete Request' : 'Add Friend'}</Button>
+                                            }} type="submit" name={user.username}>{this.state[user.username].friends ? 'Delete Follow' : this.state[user.username].request ? 'Delete Request' : 'Add Follow'}</Button>
                                         </Form>
                                     </Col>
                                     <Col>

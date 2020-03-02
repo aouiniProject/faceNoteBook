@@ -23,7 +23,6 @@ export default class SignIn extends Component {
     this.setState({
       [e.target.name]: e.target.value
     });
-    console.log(this.state);
   }
 
   login() {
@@ -33,13 +32,12 @@ export default class SignIn extends Component {
   onSubmite(e) {
     e.preventDefault();
 
-    axios.post('http://localhost:3001/api/userIn', this.state)
+    axios.post('/api/userIn', this.state)
       .then((res) => {
         if (res.data.red) {
           localStorage.setItem('token', res.data.token)
 
         }
-        console.log(res);
 
       })
       .then(() => this.login())

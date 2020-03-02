@@ -20,7 +20,8 @@ export default class Messages extends Component {
         this.getMessages = this.getMessages.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onSend = this.onSend.bind(this);
-        this.socket = io('localhost:3001');
+        this.socket = io('facenotebook.herokuapp.com');
+        // let socket = io.connect('localhost:3001');
     }
 
     onSend(e) {
@@ -28,7 +29,7 @@ export default class Messages extends Component {
         const { username } = jwtDecode(localStorage.getItem('token'))
         const { message, receiver } = this.state;
 
-        axios.post('http://localhost:3001/api/messages', { message, receiver, token: localStorage.getItem('token') })
+        axios.post('/api/messages', { message, receiver, token: localStorage.getItem('token') })
             .then(() => {
                 this.socket.emit('message', {
                     sender: username,
@@ -48,9 +49,9 @@ export default class Messages extends Component {
 
     componentDidMount() {
         const { username } = jwtDecode(localStorage.getItem('token'))
-        console.log(username)
+        // console.log(username)
 
-        axios.get(`http://localhost:3001/api/getContacts/${localStorage.getItem('token')}`)
+        axios.get(`/api/getContacts/${localStorage.getItem('token')}`)
             .then(res => {
                 let contacts = {};
 
@@ -77,9 +78,9 @@ export default class Messages extends Component {
                 const friend = this.state.contacts[this.state.contacts.length - 1];
                 this.setState({ receiver: friend })
 
-                axios.get(`http://localhost:3001/api/retrieve/${username}/${friend}`)
+                axios.get(`/api/retrieve/${username}/${friend}`)
                     .then(res => {
-                        console.log(res.data)
+                        // console.log(res.data)
                         let arr = [];
                         if (res.data.length >= 7) {
 
@@ -94,7 +95,7 @@ export default class Messages extends Component {
                             }
                         }
                         this.setState({ messages: arr })
-                        console.log(this.state.messages)
+                        // console.log(this.state.messages)
 
                     })
                     .catch(err => console.log(err))
@@ -107,7 +108,7 @@ export default class Messages extends Component {
         this.setState({ receiver: e.target.name })
         const { username } = jwtDecode(localStorage.getItem('token'))
 
-        axios.get(`http://localhost:3001/api/retrieve/${username}/${e.target.name}`)
+        axios.get(`/api/retrieve/${username}/${e.target.name}`)
             .then(res => {
                 console.log(res.data)
                 let arr = [];
